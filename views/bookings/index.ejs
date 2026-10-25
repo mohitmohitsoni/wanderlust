@@ -1,0 +1,11 @@
+<% layout("layouts/boilerplate") %>
+<div class="col-lg-8 mx-auto"><h3>My bookings</h3><hr />
+<% if (!bookings.length) { %><p>No bookings yet. <a href="/listings">Browse listings</a></p><% } %>
+<% for (const b of bookings) { %>
+  <div class="card mb-3"><div class="card-body">
+    <h5><%= b.listing ? b.listing.title : "Listing no longer available" %></h5>
+    <p class="mb-1"><%= b.checkIn.toLocaleDateString("en-IN") %> to <%= b.checkOut.toLocaleDateString("en-IN") %> &middot; <%= b.guests %> guest(s)</p>
+    <p class="mb-2">Total: &#8377;<%= b.totalPrice.toLocaleString("en-IN") %></p>
+    <form method="POST" action="/bookings/<%= b._id %>?_method=DELETE"><button class="btn btn-sm btn-dark">Cancel booking</button></form>
+  </div></div>
+<% } %></div>

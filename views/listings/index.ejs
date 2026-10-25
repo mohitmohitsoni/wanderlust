@@ -1,0 +1,20 @@
+<% layout("layouts/boilerplate") %>
+<div class="filters">
+  <a href="/listings" class="<%= !category ? 'active' : '' %>">All</a>
+  <% for (const c of categories) { %>
+    <a href="/listings?category=<%= encodeURIComponent(c) %>" class="<%= category === c ? 'active' : '' %>"><%= c %></a>
+  <% } %>
+</div>
+<% if (!listings.length) { %><p>No listings found.</p><% } %>
+<div class="row g-4">
+  <% for (const l of listings) { %>
+    <div class="col-12 col-md-6 col-lg-4 listing-card">
+      <a href="/listings/<%= l._id %>">
+        <img src="<%= l.image.url %>" class="w-100" alt="<%= l.title %>" />
+        <div class="mt-2"><b><%= l.title %></b><br />
+          <span class="text-muted"><%= l.location %>, <%= l.country %></span><br />
+          &#8377;<%= l.price.toLocaleString("en-IN") %> / night</div>
+      </a>
+    </div>
+  <% } %>
+</div>

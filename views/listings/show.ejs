@@ -1,0 +1,89 @@
+<% layout("layouts/boilerplate") %>
+<% const isOwner = currUser && listing.owner && currUser._id.equals(listing.owner._id); %>
+<div class="col-lg-9 mx-auto">
+  <h3><%= listing.title %></h3>
+  <img src="<%= listing.image.url %>" class="show-img mb-3" alt="<%= listing.title %>" />
+  <p class="text-muted mb-1">Hosted by <%= listing.owner ? listing.owner.username : "Unknown" %> &middot; #<%= listing.category %></p>
+  <p><%= listing.description %></p>
+  <p><b>&#8377;<%= listing.price.toLocaleString("en-IN") %></b> / night &middot; <%= listing.location %>, <%= listing.country %></p>
+
+  <% if (isOwner) { %>
+    <div class="d-flex gap-2 mb-4">
+      <a class="btn btn-dark" href="/listings/<%= listing._id %>/edit">Edit</a>
+      <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" onsubmit="return confirm('Delete this listing?')"><button class="btn btn-outline-danger">Delete</button></form>
+    </div>
+  <% } %>
+
+  <div class="panel mb-4">
+    <h5>Book this stay</h5>
+    <% if (!currUser) { %>
+      <p class="mb-0"><a href="/login">Log in</a> to book.</p>
+    <% } else if (isOwner) { %>
+      <p class="mb-0 text-muted">You own this listing.</p>
+    <% } else { %>
+      <form method="POST" action="/listings/<%= listing._id %>/bookings" id="bookForm" data-price="<%= listing.price %>">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Check-in</label><input type="date" id="checkIn" name="booking[checkIn]" class="form-control" required /></div>
+          <div class="col-md-4"><label class="form-label">Check-out</label><input type="date" id="checkOut" name="booking[checkOut]" class="form-control" required /></div>
+          <div class="col-md-4"><label class="form-label">Guests</label><input type="number" name="booking[guests]" value="1" min="1" max="10" class="form-control" /></div>
+        </div>
+        <p id="summary" class="text-muted mt-3 mb-2"></p>
+        <button class="btn btn-danger">Book now</button>
+      </form>
+      <script>
+        (function () {
+          const f = document.getElementById("bookForm");
+          const inEl = document.getElementById("checkIn"), outEl = document.getElementById("checkOut");
+          const out = document.getElementById("summary"), price = Number(f.dataset.price);
+          const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+          inEl.min = iso(new Date());
+          function update() {
+            if (inEl.value) outEl.min = iso(new Date(new Date(inEl.value).getTime() + 86400000));
+            if (!inEl.value || !outEl.value) { out.textContent = ""; return; }
+            const n = Math.round((new Date(outEl.value) - new Date(inEl.value)) / 86400000);
+            out.textContent = n > 0 ? n + " night(s) x \u20B9" + price.toLocaleString("en-IN") + " = \u20B9" + (n * price).toLocaleString("en-IN") : "Check-out must be after check-in.";
+          }
+          inEl.addEventListener("change", update); outEl.addEventListener("change", update);
+        })();
+      </script>
+    <% } %>
+  </div>
+
+  <h5>Reviews</h5>
+  <% if (currUser) { %>
+    <form method="POST" action="/listings/<%= listing._id %>/reviews" class="mb-4">
+      <label class="form-label">Rating</label>
+      <select name="review[rating]" class="form-select w-auto mb-2"><% for (let i = 5; i >= 1; i--) { %><option value="<%= i %>"><%= i %> star<%= i > 1 ? "s" : "" %></option><% } %></select>
+      <textarea name="review[comment]" class="form-control mb-2" rows="3" placeholder="Your review" required></textarea>
+      <button class="btn btn-outline-dark">Submit</button>
+    </form>
+  <% } %>
+  <% if (!listing.reviews.length) { %><p class="text-muted">No reviews yet.</p><% } %>
+  <div class="row g-3 mb-4">
+    <% for (const r of listing.reviews) { %>
+      <div class="col-md-6"><div class="card"><div class="card-body">
+        <b>@<%= r.author ? r.author.username : "deleted-user" %></b> &middot; <%= r.rating %>/5
+        <p class="mb-2"><%= r.comment %></p>
+        <% if (currUser && r.author && currUser._id.equals(r.author._id)) { %>
+          <form method="POST" action="/listings/<%= listing._id %>/reviews/<%= r._id %>?_method=DELETE"><button class="btn btn-sm btn-dark">Delete</button></form>
+        <% } %>
+      </div></div></div>
+    <% } %>
+  </div>
+
+  <% if (mapToken) { %>
+    <h5>Where you'll be</h5>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+    <div id="map" data-token="<%= mapToken %>" data-coords="<%= JSON.stringify(listing.geometry.coordinates) %>"></div>
+    <script>
+      (function () {
+        const el = document.getElementById("map");
+        mapboxgl.accessToken = el.dataset.token;
+        const c = JSON.parse(el.dataset.coords);
+        const map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/streets-v12", center: c, zoom: 9 });
+        new mapboxgl.Marker({ color: "#fe424d" }).setLngLat(c).addTo(map);
+      })();
+    </script>
+  <% } %>
+</div>

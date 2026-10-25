@@ -1,0 +1,13 @@
+<div class="mb-3"><label class="form-label">Title</label><input name="listing[title]" class="form-control" required value="<%= listing.title || '' %>" /></div>
+<div class="mb-3"><label class="form-label">Description</label><textarea name="listing[description]" class="form-control" rows="3" required><%= listing.description || '' %></textarea></div>
+<div class="mb-3"><label class="form-label">Image</label><input type="file" name="image" accept="image/*" class="form-control" /></div>
+<div class="row">
+  <div class="col-md-4 mb-3"><label class="form-label">Price per night (&#8377;)</label><input type="number" min="0" name="listing[price]" class="form-control" required value="<%= listing.price || '' %>" /></div>
+  <div class="col-md-4 mb-3"><label class="form-label">Location</label><input name="listing[location]" class="form-control" required value="<%= listing.location || '' %>" /></div>
+  <div class="col-md-4 mb-3"><label class="form-label">Country</label><input name="listing[country]" class="form-control" required value="<%= listing.country || '' %>" /></div>
+</div>
+<div class="mb-3"><label class="form-label">Category</label>
+  <select name="listing[category]" class="form-select">
+    <% for (const c of categories) { %><option value="<%= c %>" <%= listing.category === c ? 'selected' : '' %>><%= c %></option><% } %>
+  </select>
+</div>
